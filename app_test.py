@@ -530,18 +530,26 @@ def generate_response(query, data, explanation):
 
 # Hàm để xóa lịch sử - di chuyển định nghĩa lên đầu để có thể gọi sau này
 def clear_history():
-    """Xóa nội dung lịch sử trong file history.json mà không xóa file"""
+    """Xóa nội dung lịch sử trong file history.json và xóa lịch sử trò chuyện đang lưu trong session"""
+    # 1. Xóa nội dung file history.json
     history_file = "history.json"
     if os.path.exists(history_file):
-        # Thay vì xóa file, ghi đè với một mảng trống
         with open(history_file, "w", encoding="utf-8") as f:
             json.dump([], f, ensure_ascii=False)
-        st.success("Đã xóa lịch sử hội thoại.")
     else:
-        # Nếu file chưa tồn tại, tạo file mới với mảng trống
         with open(history_file, "w", encoding="utf-8") as f:
             json.dump([], f, ensure_ascii=False)
-        st.success("Đã tạo file lịch sử mới.")
+    
+    # 2. Xóa lịch sử trò chuyện trong session_state
+    if 'messages' in st.session_state:
+        st.session_state.messages = []
+    
+    # 3. Hiển thị thông báo thành công
+    st.success("Đã xóa lịch sử hội thoại.")
+    
+    # 4. Đặt lại session_state.view_history thành False để đóng phần hiển thị lịch sử
+    if 'view_history' in st.session_state:
+        st.session_state.view_history = False
 
 def close_history_callback():
     st.session_state.view_history = False
@@ -846,8 +854,59 @@ if 'view_history' not in st.session_state:
     st.session_state.view_history = False
 
 # Streamlit UI
-st.title("🇻🇳 Vietnam Stock Market Q&A Bot")
-st.markdown("Hỏi đáp thông tin về chứng khoán Việt Nam")
+# Thay thế phần tiêu đề dự án hiện tại
+st.markdown("""
+<div style="
+    background: linear-gradient(120deg, #1a2980, #26d0ce); 
+    padding: 8px 15px; 
+    border-radius: 12px; 
+    text-align: center; 
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+">
+    <div style="
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to right,
+            rgba(255,255,255,0) 0%,
+            rgba(255,255,255,0.3) 50%,
+            rgba(255,255,255,0) 100%
+        );
+        transform: rotate(30deg);
+        animation: shine 3s infinite;
+    "></div>
+    <h1 style="
+        color: white; 
+        font-size: 32px; 
+        font-weight: bold; 
+        margin: 5px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    ">
+        🇻🇳 VIETNAM STOCK MARKET Q&A 📈
+    </h1>
+    <p style="
+        color: rgba(255,255,255,0.9); 
+        font-size: 16px; 
+        margin: 0px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    ">
+        Hỏi đáp thông tin về chứng khoán Việt Nam
+    </p>
+</div>
+<style>
+@keyframes shine {
+    0% {transform: translateX(-100%) rotate(30deg);}
+    100% {transform: translateX(100%) rotate(30deg);}
+}
+</style>
+""", unsafe_allow_html=True)
 
 # Initialize session state for chat history
 if 'messages' not in st.session_state:
@@ -1018,16 +1077,16 @@ with st.sidebar:
     
     with col1:
         # Thay đổi nút thành toggle và điều chỉnh nhãn theo trạng thái
-        button_label = "Ẩn lịch sử" if st.session_state.view_history else "Xem lịch sử"
-        if st.button(button_label, key="view_history_btn"):
-            # Đảo ngược trạng thái khi nhấn nút
-            st.session_state.view_history = not st.session_state.view_history
+        if st.button("Xem lịch sử", key="view_history_btn"):
+            # Khi nhấn nút, hiển thị lịch sử
+            st.session_state.view_history = True
+            # Cần rerun để hiển thị lịch sử ngay lập tức
+            st.rerun()
     
     with col2:
         if st.button("Xóa lịch sử", key="clear_history_btn"):
             clear_history()
 
-# Phần hiển thị lịch sử nếu được yêu cầu
 # Phần hiển thị lịch sử nếu được yêu cầu
 if st.session_state.view_history:
     # Tạo phần tiêu đề đẹp và nổi bật hơn
@@ -1040,10 +1099,27 @@ if st.session_state.view_history:
         with col2:
             st.markdown(
                 """
-                <div style="background-color:gray; padding:5px; border-radius:8px; text-align:center;">
-                    <h1 style="color:white; font-size:22px; margin:0; padding:2px;">
+                <div style="
+                    background: linear-gradient(135deg, #1e3c72, #2a5298); 
+                    padding: 8px 12px; 
+                    border-radius: 8px; 
+                    text-align: center;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                    border: 1px solid #4a6ea9;
+                    margin-bottom: 10px;
+                    margin-top: 5px;
+                ">
+                    <h2 style="
+                        color: white; 
+                        font-size: 26px; 
+                        margin: 0; 
+                        padding: 5px 0;
+                        letter-spacing: 1px;
+                        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                        line-height: 1.4;
+                    ">
                         📚 LỊCH SỬ HỘI THOẠI 💬
-                    </h1>
+                    </h2>
                 </div>
                 """, 
                 unsafe_allow_html=True
