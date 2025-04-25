@@ -1,22 +1,3 @@
-[
-  {
-    "question": {
-      "role": "user",
-      "content": "giá cổ phiếu vnpt"
-    },
-    "answer": {
-      "role": "assistant",
-      "content": "VNPT (Vietnam Posts and Telecommunications Group) is primarily a state-owned enterprise and not listed as a public company on Vietnamese stock exchanges. If you're looking for information on a related or specific subsidiary of VNPT that might be listed, please provide more details. Otherwise, VNPT itself does not have stock price information available for public trading."
-    }
-  },
-  {
-    "question": {
-      "role": "user",
-      "content": "giá cổ phiếu vnpt"
-    },
-    "answer": {
-      "role": "assistant",
-      "content": "VNPT không được niêm yết trên các sàn chứng khoán Việt Nam như HOSE, HNX, hoặc UPCOM. Hiện tại, VNPT là một công ty thuộc sở hữu nhà nước và chưa công khai niêm yết cổ phiếu trên các sàn giao dịch chứng khoán. Do đó, tôi không thể cung cấp thông tin về giá cổ phiếu của VNPT. Nếu bạn quan tâm tới thông tin về các công ty khác hoặc có câu hỏi khác, xin vui lòng cho tôi biết!"
-    }
-  }
-]
+
+[]
+
