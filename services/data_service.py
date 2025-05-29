@@ -10,11 +10,17 @@ from api.vnstock_api import (
 )
 from services.prediction_service import execute_prediction_function
 
+
 def process_query(query, openai_api_key, thinking_placeholder):
     """Xử lý truy vấn của người dùng và trả về kết quả"""
+    from services.chat_history_service import get_chat_context
+    
+    # Lấy lịch sử trò chuyện để sử dụng làm context
+    chat_context = get_chat_context(max_messages=100)  
+    
     # Xác định hàm cần gọi dựa trên truy vấn
     thinking_placeholder.markdown("⏳ Đang xác định loại dữ liệu cần truy vấn...")
-    function_info = get_function_call(query)
+    function_info = get_function_call(query, chat_context = chat_context)
     
     # Thực thi hàm phù hợp
     if function_info.get("function"):
@@ -29,9 +35,9 @@ def process_query(query, openai_api_key, thinking_placeholder):
             # Xử lý dữ liệu để hiển thị tốt hơn
             processed_data = process_data_for_display(data, function_info.get("function"))
             
-            # Tạo câu trả lời tự nhiên
+            # Tạo câu trả lời tự nhiên sử dụng lịch sử chat làm context
             thinking_placeholder.markdown("⏳ Đang phân tích dữ liệu và tạo câu trả lời...")
-            response_content = generate_response(query, processed_data)
+            response_content = generate_response(query, processed_data, chat_context)
             
             return response_content, processed_data
     else:

@@ -3,11 +3,14 @@ from dotenv import load_dotenv
 import os
 import json
 
+# to run the app, use the command: python.exe -m streamlit run app.py
+
 # Nhập các modules cần thiết
 from config import APP_TITLE, APP_ICON, APP_LAYOUT
 from api.openai_api import validate_api_key
-from ui.components import display_chat_history, display_user_message, display_assistant_response, render_sidebar
+from ui.components import display_user_message, display_assistant_response, render_sidebar
 from services.data_service import process_query
+from services.chat_history_service import save_chat_history, load_chat_history
 
 # Load biến môi trường
 load_dotenv()
@@ -29,16 +32,36 @@ def main():
     openai_api_key = validate_api_key()
     if not openai_api_key:
         return
-    
-    # Khởi tạo session state
+    ls = load_chat_history()
+    forget_messages = {
+        "role": "system",
+        "content": "Đã hết phiên trò chuyện, vui lòng nhập câu hỏi mới. KHÔNG SỬ DỤNG LỊCH SỬ TRÒ CHUYỆN TRƯỚC ĐÓ.VỚI THÔNG TIN LIÊN QUAN ĐẾN CỔ PHIẾU, CÔNG TY CHỈ SỬ DỤNG THÔNG TIN TRONG PHIÊN CỦA MÌNH, CÒN CÁC YÊU CẦU CÁ NHÂN HÓA THÌ KHÔNG GIỚI HẠN TRONG PHIÊN, BẠN CẦN GHI NHỚ TẤT CẢ VÀ THỰC HIỆN CHO ĐÚNG"
+    }
+    ls.append(forget_messages)  # Thêm tin nhắn quên lịch sử vào lịch sử chat
+    save_chat_history(ls)  # Lưu tin nhắn quên lịch sử vào file
+
+    # Tải lịch sử trò chuyện từ file
     if 'messages' not in st.session_state:
-        st.session_state.messages = []
+        st.session_state.messages = load_chat_history()
+
+    
+    # Khởi tạo session state cho phiên hiện tại
+    if 'current_message' not in st.session_state:
+        st.session_state.current_message = None
     
     # Hiển thị sidebar
     render_sidebar()
     
-    # Hiển thị lịch sử chat
-    display_chat_history(st.session_state.messages)
+    # KHÔNG hiển thị lịch sử chat, chỉ hiển thị tin nhắn hiện tại
+    if st.session_state.current_message:
+        if st.session_state.current_message["role"] == "user":
+            display_user_message(st.session_state.current_message["content"])
+        else:
+            with st.chat_message("assistant"):
+                display_assistant_response(
+                    st.session_state.current_message["content"],
+                    st.session_state.current_message.get("data")
+                )
     
     # Xử lý đầu vào từ người dùng
     query = st.chat_input("Hỏi thông tin về chứng khoán...")
@@ -46,7 +69,10 @@ def main():
         # Hiển thị tin nhắn người dùng
         display_user_message(query)
         
-        # Thêm vào lịch sử chat
+        # Cập nhật tin nhắn hiện tại
+        st.session_state.current_message = {"role": "user", "content": query}
+        
+        # Thêm vào lịch sử chat (không hiển thị)
         st.session_state.messages.append({"role": "user", "content": query})
         
         # Xử lý truy vấn
@@ -60,17 +86,25 @@ def main():
             # Hiển thị phản hồi
             display_assistant_response(response_content, data)
         
-        # Thêm vào lịch sử chat
+        # Cập nhật tin nhắn hiện tại
+        st.session_state.current_message = {
+            "role": "assistant", 
+            "content": response_content,
+            "data": data
+        }
+        
+        # Thêm vào lịch sử chat (không hiển thị)
         assistant_message = {
             "role": "assistant", 
             "content": response_content
         }
-        if data is not None:
-            assistant_message["data"] = data
-            
+
         st.session_state.messages.append(assistant_message)
+        
+        # Lưu lịch sử trò chuyện vào file
+        save_chat_history(st.session_state.messages)
 
 if __name__ == "__main__":
     main()
 
-# to run the app, use the command: python.exe -m streamlit run app.py    
+# to run the app, use the command: python.exe -m streamlit run app.py
