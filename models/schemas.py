@@ -60,7 +60,7 @@ def get_function_schemas():
                         },
                         "from_date": {
                             "type": "string",
-                            "description": "Ngày bắt đầu định dạng YYYY-MM-DD, nếu không có sẽ lấy 30 ngày trước"
+                            "description": "Ngày bắt đầu định dạng YYYY-MM-DD, nếu không có sẽ lấy 30 ngày trước, tự động tính toán ngày nếu yêu cầu"
                         },
                         "to_date": {
                             "type": "string",
