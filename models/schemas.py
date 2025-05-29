@@ -138,7 +138,7 @@ def get_function_schemas():
                             "items": {
                                 "type": "string"
                             },
-                            "description": "Danh sách mã cổ phiếu cần truy vấn, nếu điền tên công ty thì tự động truy vấn mã cổ phiếu tương ứng"
+                            "description": "Danh sách mã cổ phiếu cần truy vấn, nếu điền tên công ty thì tự động truy vấn mã cổ phiếu tương ứng, nhớ cẩn thận với hàm price_board vì nó sẽ trả về bảng giá của nhiều cổ phiếu, nhớ trích xuất ĐÚNG và ĐỦ mã cổ phiếu để chạy"
                         }
                     },
                     "required": ["function_name", "symbols"]

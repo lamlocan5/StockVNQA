@@ -4,7 +4,7 @@ import streamlit as st
 import openai
 import pandas as pd
 
-from config import OPENAI_MODEL
+from config import OPENAI_MODEL, SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 from models.schemas import get_function_schemas
 
 def validate_api_key():
@@ -30,7 +30,7 @@ def get_function_call(query):
         response = openai.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
-                {"role": "system", "content": "Bạn là trợ lý phân tích thị trường chứng khoán giúp người dùng lấy thông tin về chứng khoán Việt Nam sử dụng thư viện vnstock. Xác định hàm phù hợp và các tham số dựa trên yêu cầu của người dùng."},
+                {"role": "system", "content": "Bạn là trợ lý phân tích thị trường chứng khoán giúp người dùng lấy thông tin về chứng khoán Việt Nam sử dụng thư viện vnstock. Xác định hàm phù hợp và các tham số dựa trên yêu cầu của người dùng. Nhớ xác định ĐÚNG và ĐỦ các tham số cần thiết để hàm hoạt động."},
                 {"role": "user", "content": query}
             ],
             tools=functions,
@@ -84,13 +84,15 @@ def generate_response(query, data):
         if len(data_str) > 8000:
             data_str = data_str[:8000] + "... [dữ liệu bị cắt ngắn]"
         
+        # Chuẩn bị prompt dựa trên template
+        user_prompt = USER_PROMPT_TEMPLATE.format(query=query, data=data_str)
+        
         # Gọi OpenAI API để tạo phản hồi
         response = openai.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
-                {"role": "system", "content": "Bạn là chuyên gia phân tích tài chính chuyên về thị trường chứng khoán Việt Nam. Cung cấp phân tích rõ ràng, chính xác và sâu sắc dựa trên dữ liệu được cung cấp. Sử dụng các kiến thức phân tích chuyên ngành liên quan đến cố phiếu để tư vấn. Sử dụng tiếng Việt trong câu trả lời vì đây là nội dung cho người dùng Việt Nam."},
-                {"role": "user", 
-                 "content": f"Truy vấn: {query}\n\nDữ liệu: {data_str}\n\nDựa trên dữ liệu này, hãy cung cấp phân tích toàn diện và trả lời cho truy vấn. Giải thích các hiểu biết chính, xu hướng và ý nghĩa theo cách dễ hiểu. Nếu là dự đoán giá cổ phiếu, hãy nhấn mạnh rằng đây chỉ là dự đoán mô hình và không phải khuyến nghị đầu tư. Tránh sử dụng các từ ngữ như 'tôi nghĩ' hay 'có thể', mà hãy sử dụng các từ như 'dựa trên dữ liệu này' hoặc 'theo mô hình này'. Bảo vệ người dùng khỏi những quyết định đầu tư sai lầm bằng cách nhấn mạnh rằng đây chỉ là dự đoán mô hình và không phải khuyến nghị đầu tư. Hãy sử dụng các từ ngữ như 'dựa trên dữ liệu này' hoặc 'theo mô hình này' để thể hiện rằng đây là một phân tích dựa trên dữ liệu, không phải là ý kiến cá nhân. Nếu người dùng không yêu cầu dự đoán thì đừng nói gì đến nó. Nếu người dùng yêu cầu dự đoán thì hãy nói rằng đây là một dự đoán mô hình và không phải khuyến nghị đầu tư. Hãy nhấn mạnh rằng đây chỉ là dự đoán mô hình và không phải khuyến nghị đầu tư. Nếu người dùng không yêu cầu dự đoán thì đừng nói gì đến nó. Ngôn ngữ cần bảo vệ data do mô hình của mình dự đoán được, không được chê quá "},
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt}
             ]
         )
         
