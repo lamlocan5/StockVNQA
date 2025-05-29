@@ -14,7 +14,7 @@ from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.layers import Dropout, BatchNormalization
 from tensorflow.keras.callbacks import EarlyStopping
 
-def train_with_XGBoost(ticker, num_days=350, test_size=0.2):
+def train_with_XGBoost(ticker, num_days=350, test_size=0.2, random_state=42):
     """
     Train mô hình XGBoost với số ngày dữ liệu được chỉ định
     
@@ -22,18 +22,21 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2):
         ticker (str): Mã cổ phiếu
         num_days (int): Số ngày dữ liệu muốn sử dụng
         test_size (float): Tỷ lệ dữ liệu test (0-1)
+        random_state (int): Seed cho reproducibility
         
     Returns:
         dict: Kết quả train và đánh giá mô hình
     """
     try:
+        # Import metrics để tính classification scores
+        from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+        
         end_date = datetime.now()
         end_date_str = end_date.strftime('%Y-%m-%d')
         
         from vnstock import Quote
         quote = Quote(symbol=ticker)
         df = quote.history(start = '2000-01-01', end= end_date_str, interval='1D')
-
 
         numeric_columns = ['open', 'high', 'low', 'close', 'volume']
         for col in numeric_columns:
@@ -63,10 +66,7 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2):
 
         total_days = len(df)
         if total_days < num_days:
-            # Nếu muốn tiếp tục với số ngày hiện có, giữ nguyên dòng dưới
             num_days = total_days
-            # Nếu muốn bỏ qua ticker không đủ dữ liệu, uncomment dòng dưới
-            # return None
         
         df = df.tail(num_days).reset_index(drop=True)
         
@@ -82,23 +82,37 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2):
         X_train, X_test = X.iloc[:train_rows], X.iloc[train_rows:]
         y_train, y_test = y.iloc[:train_rows], y.iloc[train_rows:]
         
-        
-        model = xgb.XGBRegressor(n_estimators=300, max_depth=2, learning_rate=0.05,
-                                 colsample_bytree=0.8, gamma=0.1, min_child_weight=3, subsample=0.8)
+        # Thêm random_state vào XGBRegressor
+        model = xgb.XGBRegressor(
+            n_estimators=300, 
+            max_depth=2, 
+            learning_rate=0.05,
+            colsample_bytree=0.8, 
+            gamma=0.1, 
+            min_child_weight=3, 
+            subsample=0.8,
+            random_state=random_state  # Thêm dòng này
+        )
         model.fit(X_train, y_train)
         
         y_pred = model.predict(X_test)
+        
+        # Regression metrics
         mse = mean_squared_error(y_test, y_pred)
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(y_test, y_pred)
         r2 = r2_score(y_test, y_pred)
         
-
+        # Classification metrics cho direction prediction
         y_direction_true = (y_test.values > X_test['close'].values).astype(int)
         y_direction_pred = (y_pred > X_test['close'].values).astype(int)
-        direction_accuracy = np.mean(y_direction_true == y_direction_pred)
         
-
+        accuracy = accuracy_score(y_direction_true, y_direction_pred)
+        precision = precision_score(y_direction_true, y_direction_pred, zero_division=0)
+        recall = recall_score(y_direction_true, y_direction_pred, zero_division=0)
+        f1 = f1_score(y_direction_true, y_direction_pred, zero_division=0)
+        
+        # Dự đoán ngày mai
         latest = df.iloc[-1:].copy()
         X_future = latest[features]
         predicted_price_tomorrow = model.predict(X_future)[0]
@@ -115,10 +129,20 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2):
             'data_days': len(df),
             'train_days': len(X_train),
             'test_days': len(X_test),
+            'random_state': random_state,  # Track random_state used
+            
+            # Regression metrics
             'rmse': rmse,
             'mae': mae,
             'r2': r2,
-            'direction_accuracy': direction_accuracy,
+            
+            # Classification metrics
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1_score': f1,
+            'direction_accuracy': accuracy,  # Backward compatibility
+            
             'current_price': current_price,
             'predicted_price': predicted_price_tomorrow,
             'change_pct': change_pct,
@@ -130,16 +154,35 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2):
         traceback.print_exc()
         return None
     
-def train_LSTM(ticker):
+def train_LSTM(ticker, random_state=42):
     """
-    Train mô hình LTSM
+    Train mô hình LSTM
     
     Args:
         ticker (str): Mã cổ phiếu
+        random_state (int): Seed cho reproducibility
     Returns:
         dict: Kết quả train và đánh giá mô hình
     """
     try:
+        # Set random seeds cho reproducibility
+        import random
+        import os
+        
+        # Set seeds cho tất cả các library
+        np.random.seed(random_state)
+        random.seed(random_state)
+        os.environ['PYTHONHASHSEED'] = str(random_state)
+        
+        # Set TensorFlow seeds
+        try:
+            import tensorflow as tf
+            tf.random.set_seed(random_state)
+            # Để deterministic operations (có thể chậm hơn)
+            tf.config.experimental.enable_op_determinism()
+        except:
+            pass
+            
         end_date = datetime.now()
         end_date_str = end_date.strftime('%Y-%m-%d')
         
@@ -238,7 +281,7 @@ def train_LSTM(ticker):
             df_check = df_check.fillna(0)
             df_features[extended_features] = df_check
         
-        # Chuẩn hóa tất cả đặc trưng
+        # Chuẩn hóa tất cả đặc trưng - có thể set random_state nếu có shuffle
         scaler = MinMaxScaler()
         try:
             scaled_data = scaler.fit_transform(df_features[extended_features])
@@ -265,14 +308,28 @@ def train_LSTM(ticker):
         y_train, y_test = y[:split], y[split:]
 
         # --- PHẦN 5: XÂY DỰNG VÀ HUẤN LUYỆN MÔ HÌNH ---
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import LSTM, Dense
+        
+        # Set seed cho Keras layer initialization
+        tf.keras.utils.set_random_seed(random_state)
+        
         model = Sequential()
         model.add(LSTM(64, input_shape=(window_size, X.shape[2])))
         model.add(Dense(1))
-        model.compile(optimizer='adam', loss='mean_squared_error')
-        model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=0)
+        
+        # Compile với deterministic optimizer
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+        model.compile(optimizer=optimizer, loss='mean_squared_error')
+        
+        # Train với shuffle=False để đảm bảo reproducibility
+        model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=0, shuffle=False)
 
         # --- PHẦN 6: DỰ ĐOÁN VÀ ĐÁNH GIÁ ---
         y_pred = model.predict(X_test)
+        
+        # Import metrics để tính classification scores
+        from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
         
         # Chuyển đổi giá trị về thang đo gốc
         # Tạo mảng với giá trị dự đoán ở vị trí đầu tiên và 0 ở các vị trí còn lại
@@ -287,13 +344,12 @@ def train_LSTM(ticker):
         y_pred_inv = scaler.inverse_transform(y_pred_full)[:, 0]
         y_test_inv = scaler.inverse_transform(y_test_full)[:, 0]
 
-        # Tính RMSE
+        # Tính các regression metrics
         rmse = np.sqrt(mean_squared_error(y_test_inv, y_pred_inv))
-        
-        # Tính R²
+        mae = mean_absolute_error(y_test_inv, y_pred_inv)
         r2 = r2_score(y_test_inv, y_pred_inv)
         
-        # Tính Direction Accuracy
+        # Tính Direction Accuracy và classification metrics
         start_idx = window_size + split
         actual_current_prices = df['close'].values[start_idx:start_idx+len(y_test_inv)-1]
         
@@ -304,8 +360,11 @@ def train_LSTM(ticker):
         actual_direction = (y_test_inv[1:min_len+1] > actual_current_prices[:min_len]).astype(int)
         predicted_direction = (y_pred_inv[1:min_len+1] > actual_current_prices[:min_len]).astype(int)
         
-        # Tính direction accuracy
-        direction_accuracy = np.mean(actual_direction == predicted_direction)
+        # Tính classification metrics
+        accuracy = np.mean(actual_direction == predicted_direction)
+        precision = precision_score(actual_direction, predicted_direction, zero_division=0)
+        recall = recall_score(actual_direction, predicted_direction, zero_division=0)
+        f1 = f1_score(actual_direction, predicted_direction, zero_division=0)
         
         # --- PHẦN 7: DỰ ĐOÁN GIÁ CHO NGÀY TIẾP THEO ---
         last_seq = scaled_data[-window_size:]
@@ -322,15 +381,25 @@ def train_LSTM(ticker):
         current_price = df['close'].iloc[-1]
         change_pct = ((next_day_price - current_price) / current_price) * 100
         
-        
         return {
             'ticker': ticker,
             'data_days': len(df),
             'train_days': len(y_train),
             'test_days': len(y_test),
+            'random_state': random_state,  # Track random_state used
+            
+            # Regression metrics
             'rmse': rmse,
+            'mae': mae,
             'r2': r2,
-            'direction_accuracy': direction_accuracy,
+            
+            # Classification metrics
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1_score': f1,
+            'direction_accuracy': accuracy,  # Backward compatibility
+            
             'current_price': current_price,
             'predicted_price': next_day_price,
             'change_pct': change_pct,
@@ -342,6 +411,5 @@ def train_LSTM(ticker):
         import traceback
         traceback.print_exc()
         return None
-
 
 

@@ -31,7 +31,8 @@ def execute_prediction_function(arguments):
                     "model": "XGBoost",
                     "r2": result1_df["r2"].iloc[0],
                     "rmse": result1_df["rmse"].iloc[0],
-                    "predicted_price": result1_df["predicted_price"].iloc[0]
+                    "mae": result1_df["mae"].iloc[0],
+                    "predicted_price": result1_df["predicted_price"].iloc[0],
                 }, None
             else:
                 print(f"LSTM có độ chính xác cao hơn XGBoost với r2 = {result2_df["r2"].iloc[0]} còn XGBoost là {result1_df["r2"].iloc[0]}")
@@ -39,22 +40,29 @@ def execute_prediction_function(arguments):
                     "model": "LSTM",
                     "r2": result2_df["r2"].iloc[0],
                     "rmse": result2_df["rmse"].iloc[0],
-                    "predicted_price": result2_df["predicted_price"].iloc[0]
+                    "mae": result2_df["mae"].iloc[0],
+                    "predicted_price": result2_df["predicted_price"].iloc[0],
                 }, None
         else:
             if(result1_df["direction_accuracy"].iloc[0] >= result2_df["direction_accuracy"].iloc[0]):
                 print(f"XGBoost có độ chính xác cao hơn LSTM với độ chính xác = {result1_df["direction_accuracy"].iloc[0]} còn LSTM là {result2_df["direction_accuracy"].iloc[0]}")
                 return {
                     "model": "XGBoost",
+                    "r2": result1_df["r2"].iloc[0],
+                    "rmse": result1_df["rmse"].iloc[0],
+                    "mae": result1_df["mae"].iloc[0],
                     "direction_accuracy": result1_df["direction_accuracy"].iloc[0],
-                    "predicted_trend": result1_df["trend"].iloc[0]
+                    "predicted_trend": result1_df["trend"].iloc[0],
                 }, None
             else:
                 print(f"LSTM có độ chính xác cao hơn XGBoost với độ chính xác = {result2_df["direction_accuracy"].iloc[0]} còn XGBoost là {result1_df["direction_accuracy"].iloc[0]}")
                 return {
                     "model": "LSTM",
+                    "r2": result2_df["r2"].iloc[0],
+                    "rmse": result2_df["rmse"].iloc[0],
+                    "mae": result2_df["mae"].iloc[0],
                     "direction_accuracy": result2_df["direction_accuracy"].iloc[0],
-                    "predicted_trend": result2_df["trend"].iloc[0]
+                    "predicted_trend": result2_df["trend"].iloc[0],
                 }, None
     except Exception as e:
         import traceback
