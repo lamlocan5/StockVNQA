@@ -35,7 +35,7 @@ def main():
     ls = load_chat_history()
     forget_messages = {
         "role": "system",
-        "content": "Đã hết phiên trò chuyện, vui lòng nhập câu hỏi mới. KHÔNG SỬ DỤNG LỊCH SỬ TRÒ CHUYỆN TRƯỚC ĐÓ.VỚI THÔNG TIN LIÊN QUAN ĐẾN CỔ PHIẾU, CÔNG TY CHỈ SỬ DỤNG THÔNG TIN TRONG PHIÊN CỦA MÌNH, CÒN CÁC YÊU CẦU CÁ NHÂN HÓA THÌ KHÔNG GIỚI HẠN TRONG PHIÊN, BẠN CẦN GHI NHỚ TẤT CẢ VÀ THỰC HIỆN CHO ĐÚNG"
+        "content": "Đã hết phiên trò chuyện, vui lòng nhập câu hỏi mới.VỚI THÔNG TIN LIÊN QUAN ĐẾN CỔ PHIẾU, CÔNG TY CHỈ SỬ DỤNG THÔNG TIN TRONG PHIÊN CỦA MÌNH (KHÔNG SỬ DỤNG CỦA PHIÊN TRƯỚC), CÒN CÁC YÊU CẦU CÁ NHÂN HÓA THÌ KHÔNG GIỚI HẠN TRONG PHIÊN, BẠN CẦN GHI NHỚ TẤT CẢ VÀ THỰC HIỆN CHO ĐÚNG"
     }
     ls.append(forget_messages)  # Thêm tin nhắn quên lịch sử vào lịch sử chat
     save_chat_history(ls)  # Lưu tin nhắn quên lịch sử vào file

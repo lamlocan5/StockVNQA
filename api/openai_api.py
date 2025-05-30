@@ -4,7 +4,7 @@ import streamlit as st
 import openai
 import pandas as pd
 
-from config import OPENAI_MODEL, SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
+from config import OPENAI_MODEL, SYSTEM_PROMPT, USER_PROMPT_TEMPLATE, FUNCTION_CALLING_PROMPT
 from models.schemas import get_function_schemas
 
 def validate_api_key():
@@ -28,13 +28,14 @@ def get_function_call(query, chat_context=None):
         
         # previous_query = next(msg["content"] for msg in chat_context if msg["role"] == "user") if chat_context else "Không có câu hỏi trước đó"
         # print(f"Previous query: {previous_query}")
+        user_query_history = FUNCTION_CALLING_PROMPT.format(query=query, chat_context=chat_context if chat_context else "Không có lịch sử trò chuyện")
 
         # Gọi OpenAI API với function calling
         response = openai.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": "Bạn là trợ lý phân tích thị trường chứng khoán giúp người dùng lấy thông tin về chứng khoán Việt Nam sử dụng thư viện vnstock. Xác định hàm phù hợp và các tham số dựa trên yêu cầu của người dùng. Nhớ xác định ĐÚNG và ĐỦ các tham số cần thiết để hàm hoạt động."},
-                {"role": "user", "content": query + f"\n\n Sử dụng lịch sử trò chuyện để hiểu rõ hơn về ngữ cảnh và sở thích của tôi, CÓ THỂ sử dụng thông tin từ các câu hỏi trước để hỗ trợ trả lời cho câu hỏi này (ĐỪNG DÙNG NẾU KHÔNG CẦN THIẾT, ƯU TIÊN CÁC CÂU HỎI GẦN NHẤT, VỚI THÔNG TIN LIÊN QUAN ĐẾN CỔ PHIẾU, CÔNG TY CHỈ SỬ DỤNG THÔNG TIN TRONG PHIÊN CỦA MÌNH, CÒN CÁC YÊU CẦU CÁ NHÂN HÓA THÌ KHÔNG GIỚI HẠN TRONG PHIÊN, BẠN CẦN GHI NHỚ TẤT CẢ VÀ THỰC HIỆN CHO ĐÚNG). Câu hỏi trước đó: {chat_context}."}
+                {"role": "user", "content": user_query_history}
             ],
             tools=functions,
             tool_choice="auto"
