@@ -15,7 +15,7 @@ EXAMPLE_QUESTIONS = [
     "Liệt kê các công ty trong ngành ngân hàng",
     "Ai là cổ đông lớn nhất của VNM?",
     "Dự đoán giá cổ phiếu VNM ",
-    "Dự đoán xu hướng giá GH3"
+
 ]
 
 # Thông tin về ứng dụng
