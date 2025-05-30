@@ -1,5 +1,5 @@
 # Cấu hình ứng dụng
-APP_TITLE = "Stock VN Q&A Bot"
+APP_TITLE = "Vietnam Stock Market Q&A Bot"
 APP_ICON = "📈"
 APP_LAYOUT = "wide"
 
