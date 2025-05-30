@@ -56,3 +56,4 @@ __pycache__/
 *$py.class
 *.pyc
 chat_history.json
+*.toml
