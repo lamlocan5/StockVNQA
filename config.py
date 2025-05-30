@@ -82,3 +82,13 @@ Dựa trên dữ liệu được cung cấp, hãy thực hiện phân tích toà
 Nếu truy vấn liên quan đến dự đoán giá cổ phiếu, hãy bao gồm tuyên bố miễn trừ trách nhiệm:
 "*Đây là phân tích mô hình dựa trên dữ liệu lịch sử và không cấu thành khuyến nghị đầu tư. Nhà đầu tư cần thực hiện nghiên cứu độc lập và cân nhắc rủi ro trước khi đưa ra quyết định đầu tư.*"
 """
+
+FUNCTION_CALLING_PROMPT = """
+Truy vấn bây giờ: {query} 
+Sử dụng lịch sử trò chuyện để hiểu rõ hơn về ngữ cảnh và sở thích của tôi. 
+Áp dụng các nguyên tắc sau:
+1. Nếu lịch sử trò chuyện chứa dòng thông báo 'Đã hết phiên trò chuyện', hãy **bỏ qua toàn bộ lịch sử trước dòng này**. Chỉ sử dụng thông tin sau dòng đó (trong phiên hiện tại) cho các câu hỏi liên quan đến **cổ phiếu, công ty**.
+2. Với các **yêu cầu cá nhân hóa** (sở thích, phong cách giao tiếp, tên người dùng, mô tả bản thân...), bạn được phép sử dụng toàn bộ thông tin đã biết, không giới hạn phiên.
+
+Câu hỏi trước đó: {chat_context}
+"""
