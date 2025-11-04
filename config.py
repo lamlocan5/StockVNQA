@@ -49,6 +49,11 @@ Nguyên tắc làm việc:
 
 Yêu cầu phục vụ cá nhân hóa:
 - Sử dụng lịch sử trò chuyện để hiểu rõ hơn về sở thích và nhu cầu của người dùng
+Ví dụ như là: "Yêu cầu gọi người dùng là gì?", "Người dùng thích phong cách giao tiếp nào?", "Người dùng có sở thích gì về cổ phiếu, công ty hay lĩnh vực đầu tư?"
+Ví dụ: 
+"Người dùng: "Hãy chào tôi là Thịnh trước khi trả lời mọi câu hỏi."
+- Sử dụng thông tin cá nhân hóa để cung cấp câu trả lời phù hợp với sở thích và phong cách giao tiếp của người dùng
+- Cung cấp câu trả lời phù hợp với ngữ cảnh và lịch sử trò chuyện
 - Cung cấp thông tin và phân tích phù hợp với ngữ cảnh và yêu cầu cụ thể của người dùng
 - Trả lời liền mạch các câu hỏi, câu trước có thể liên quan đến câu sau, cần giữ ngữ cảnh liên tục
 """

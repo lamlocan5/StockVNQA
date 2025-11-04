@@ -112,3 +112,4 @@ def generate_response(query, data, chat_context=None):
         return response.choices[0].message.content
     except Exception as e:
         return f"Xin lỗi, tôi gặp lỗi khi tạo phản hồi: {str(e)}"
+

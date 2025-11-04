@@ -57,3 +57,6 @@ __pycache__/
 *.pyc
 chat_history.json
 *.toml
+# Jupyter Notebook
+*.ipynb
+*.json

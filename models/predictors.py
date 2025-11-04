@@ -64,11 +64,11 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2, random_state=42):
         df = df.replace([np.inf, -np.inf], np.nan)
         df.dropna(inplace=True)
 
-        total_days = len(df)
-        if total_days < num_days:
-            num_days = total_days
+        # total_days = len(df)
+        # if total_days < num_days:
+        #     num_days = total_days
         
-        df = df.tail(num_days).reset_index(drop=True)
+        # df = df.tail(num_days).reset_index(drop=True)
         
         features = ['open', 'high', 'low', 'close', 'volume', 'volatility', 
                    'return_1d', 'ma5', 'ma10', 'volume_ratio']
@@ -87,8 +87,8 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2, random_state=42):
             n_estimators=300, 
             max_depth=2, 
             learning_rate=0.05,
-            colsample_bytree=0.8, 
-            gamma=0.1, 
+            colsample_bytree=0.8, #giảm overfit
+            gamma=0.1, #ngưỡng điều chỉnh độ phức tạp của mô hình
             min_child_weight=3, 
             subsample=0.8,
             random_state=random_state  # Thêm dòng này
@@ -106,11 +106,6 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2, random_state=42):
         # Classification metrics cho direction prediction
         y_direction_true = (y_test.values > X_test['close'].values).astype(int)
         y_direction_pred = (y_pred > X_test['close'].values).astype(int)
-        
-        accuracy = accuracy_score(y_direction_true, y_direction_pred)
-        precision = precision_score(y_direction_true, y_direction_pred, zero_division=0)
-        recall = recall_score(y_direction_true, y_direction_pred, zero_division=0)
-        f1 = f1_score(y_direction_true, y_direction_pred, zero_division=0)
         
         # Dự đoán ngày mai
         latest = df.iloc[-1:].copy()
@@ -136,12 +131,6 @@ def train_with_XGBoost(ticker, num_days=350, test_size=0.2, random_state=42):
             'mae': mae,
             'r2': r2,
             
-            # Classification metrics
-            'accuracy': accuracy,
-            'precision': precision,
-            'recall': recall,
-            'f1_score': f1,
-            'direction_accuracy': accuracy,  # Backward compatibility
             
             'current_price': current_price,
             'predicted_price': predicted_price_tomorrow,
@@ -360,11 +349,6 @@ def train_LSTM(ticker, random_state=42):
         actual_direction = (y_test_inv[1:min_len+1] > actual_current_prices[:min_len]).astype(int)
         predicted_direction = (y_pred_inv[1:min_len+1] > actual_current_prices[:min_len]).astype(int)
         
-        # Tính classification metrics
-        accuracy = np.mean(actual_direction == predicted_direction)
-        precision = precision_score(actual_direction, predicted_direction, zero_division=0)
-        recall = recall_score(actual_direction, predicted_direction, zero_division=0)
-        f1 = f1_score(actual_direction, predicted_direction, zero_division=0)
         
         # --- PHẦN 7: DỰ ĐOÁN GIÁ CHO NGÀY TIẾP THEO ---
         last_seq = scaled_data[-window_size:]
@@ -393,12 +377,6 @@ def train_LSTM(ticker, random_state=42):
             'mae': mae,
             'r2': r2,
             
-            # Classification metrics
-            'accuracy': accuracy,
-            'precision': precision,
-            'recall': recall,
-            'f1_score': f1,
-            'direction_accuracy': accuracy,  # Backward compatibility
             
             'current_price': current_price,
             'predicted_price': next_day_price,
